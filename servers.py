@@ -32,7 +32,7 @@ class Product:
         return hash((self.name, self.price))
  
  
-class TooManyProductsFoundError:
+class TooManyProductsFoundError(Exception):
     # Reprezentuje wyjątek związany ze znalezieniem zbyt dużej liczby produktów.
     pass
  
@@ -62,9 +62,9 @@ class Server(ABC):
 class ListServer(Server):
     def __init__(self, products: List[Product], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.__products: List[Product] = products
+        self.products: List[Product] = products
     def search_all_products(self, n_letters: int = 1) -> List[Product]:
-        return self.__products
+        return self.products
 
     pass
  
@@ -72,17 +72,24 @@ class ListServer(Server):
 class MapServer:
     def __init__(self, products: List[Product], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.__products: Dict[str, Product] = {p.name: p for p in products}
+        self.products: Dict[str, Product] = {p.name: p for p in products}
     def search_product(self, n_letters: int = 1) -> List[Product]:
-        return self.__products
+        return self.products
     pass
  
  
 class Client:
     # FIXME: klasa powinna posiadać metodę inicjalizacyjną przyjmującą obiekt reprezentujący serwer
- 
+    def __init__ (self, server: Server )->None:
+        self.server=server
     def get_total_price(self, n_letters: Optional[int]) -> Optional[float]:
-        raise NotImplementedError()
+        try:
+            products = self.server.search_products(n_letters)
+            total_price = sum([prod.price for prod in products])
+            return total_price
+        except TooManyProductsFoundError:
+            print("Too many products found. Please refine your search.")
+            return None
     
 try:
     produkt1 = Product("x0129", 250.00)
