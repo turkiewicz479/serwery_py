@@ -55,7 +55,7 @@ class Server(ABC):
             return prod_found
     @abstractmethod
     def search_all_products(self, n_letters:int )->List[Product]:
-        return NotImplemented
+        raise NotImplementedError
     
     
     
