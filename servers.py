@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 class Product:
     # FIXME: klasa powinna posiadać metodę inicjalizacyjną przyjmującą argumenty wyrażające nazwę produktu (typu str) i jego cenę (typu float) -- w takiej kolejności -- i ustawiającą atrybuty `name` (typu str) oraz `price` (typu float)
     def __init__(self, name:str, price:float) -> None:
-        if(isinstance(name, str) and isinstance(price,float)):
+        if(isinstance(name, str) and isinstance(price,(float,int))):
             if not re.fullmatch('^[a-zA-Z]+\\d+$', name):
                 raise ValueError("Product name should have atleast 1 character and one digit in the right order")
             else:
@@ -46,15 +46,15 @@ class Server(ABC):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
     
-    def search_products(self, n_letters)->int:
+    def get_entries(self, n_letters)->int:
         prod_name_ex= '^[a-zA-Z]{{{n}}}\\d{{2,3}}$'.format(n=n_letters)
-        prod_found= [prod for prod in self.search_all_products(n_letters)if re.fullmatch(prod_name_ex, prod.name)]
+        prod_found= [prod for prod in self.get_all_products(n_letters)if re.fullmatch(prod_name_ex, prod.name)]
         if len(prod_found)> Server.n_max_returned_entries:
             raise TooManyProductsFoundError
         else:
             return prod_found
     @abstractmethod
-    def search_all_products(self, n_letters:int )->List[Product]:
+    def get_all_products(self, n_letters:int )->List[Product]:
         raise NotImplementedError
     
     
@@ -62,20 +62,19 @@ class Server(ABC):
 class ListServer(Server):
     def __init__(self, products: List[Product], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.products: List[Product] = products
-    def search_all_products(self, n_letters: int = 1) -> List[Product]:
+        self.products: List[Product] = products 
+    def get_all_products(self, n_letters:int) -> List[Product]:
         return self.products
 
-    pass
  
  
-class MapServer:
+class MapServer(Server):
     def __init__(self, products: List[Product], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.products: Dict[str, Product] = {p.name: p for p in products}
-    def search_product(self, n_letters: int = 1) -> List[Product]:
-        return self.products
-    pass
+    def get_all_products(self, n_letters:int) -> List[Product]:
+        return list(self.products.values())
+
  
  
 class Client:
@@ -84,7 +83,7 @@ class Client:
         self.server=server
     def get_total_price(self, n_letters: Optional[int]) -> Optional[float]:
         try:
-            products = self.server.search_products(n_letters)
+            products = self.server.get_all_products(n_letters)
             total_price = sum([prod.price for prod in products])
             return total_price
         except TooManyProductsFoundError:
@@ -97,3 +96,7 @@ try:
     produkt3 = Product("abcd1", 150.75)
 except ValueError as e:
     print(f"Błąd: {e}")
+
+
+    
+print('plik servers.py został wykonany')
