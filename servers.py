@@ -14,7 +14,8 @@ class Product:
             else:
                 self.name=name
                 self.price=price
-        pass
+        else:
+            raise ValueError('Wrong data type')
     def __eq__(self, other):
         if isinstance(other, Product):
             if self.name == other.name:
@@ -22,7 +23,7 @@ class Product:
             else:
                 return False
         else:
-            print('Porównywane obiekty nie należą do tej samej klasy')
+            print('Compared object are not same class')
             return None
  
     def __hash__(self):
