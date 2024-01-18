@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
  
-from typing import Optional, List
+from typing import Optional, List, Dict
 import re
 from abc import ABC, abstractmethod
 
@@ -42,21 +42,39 @@ class TooManyProductsFoundError:
 #   (2) możliwość odwołania się do atrybutu klasowego `n_max_returned_entries` (typu int) wyrażający maksymalną dopuszczalną liczbę wyników wyszukiwania,
 #   (3) możliwość odwołania się do metody `get_entries(self, n_letters)` zwracającą listę produktów spełniających kryterium wyszukiwania
 class Server(ABC):
-    n_max_returned_entries=2
+    n_max_returned_entries:int =5
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+    
+    def search_products(self, n_letters)->int:
+        prod_name_ex= '^[a-zA-Z]{{{n}}}\\d{{2,3}}$'.format(n=n_letters)
+        prod_found= [prod for prod in self.search_all_products(n_letters)if re.fullmatch(prod_name_ex, prod.name)]
+        if len(prod_found)> Server.n_max_returned_entries:
+            raise TooManyProductsFoundError
+        else:
+            return prod_found
     @abstractmethod
-    def search_product(self, n_letters:int )->List[Product]:
-        pass
+    def search_all_products(self, n_letters:int )->List[Product]:
+        return NotImplemented
+    
+    
+    
 class ListServer(Server):
     def __init__(self, products: List[Product], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.__products: List[Product] = products
-    def search_product(self, n_letters: int = 1) -> List[Product]:
+    def search_all_products(self, n_letters: int = 1) -> List[Product]:
         return self.__products
 
     pass
  
  
 class MapServer:
+    def __init__(self, products: List[Product], *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.__products: Dict[str, Product] = {p.name: p for p in products}
+    def search_product(self, n_letters: int = 1) -> List[Product]:
+        return self.__products
     pass
  
  
